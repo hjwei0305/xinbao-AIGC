@@ -1,0 +1,41 @@
+
+services:
+  # =====================
+  # CPU / 内存 / 磁盘 / 网络
+  # =====================
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    restart: unless-stopped
+
+    network_mode: host
+    pid: host
+
+    command:
+      - '--path.rootfs=/host'
+
+    volumes:
+      - /:/host:ro,rslave
+
+  # =====================
+  # NVIDIA GPU (DCGM)
+  # =====================
+  dcgm-exporter:
+    image: nvcr.io/nvidia/k8s/dcgm-exporter:latest
+    container_name: dcgm_exporter
+    restart: unless-stopped
+
+    runtime: nvidia
+
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+    ports:
+      - "9835:9400"
+
+    cap_add:
+      - SYS_ADMIN
+
+    volumes:
+      - /var/lib/nvidia-docker/volumes/nvidia_driver:/usr/local/nvidia:ro

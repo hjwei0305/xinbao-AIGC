@@ -1,0 +1,9 @@
+docker run -d \
+  --name gitea \
+  -p 3000:3000 \
+  -p 222:22 \
+  -v /srv/gitea:/data \
+  --restart always \
+  gitea/gitea:latest
+
+  账号密码  wake hjwei@11

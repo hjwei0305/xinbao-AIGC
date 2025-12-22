@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: laoheniubi
+      POSTGRES_PASSWORD: laoheniubi123
+      POSTGRES_DB: super
+    volumes:
+      - ./pg-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: pg_exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: "postgresql://laoheniubi:laoheniubi123@postgres:5432/super?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres

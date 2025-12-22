@@ -1,0 +1,82 @@
+services:
+  dbgpt:
+    image: eosphorosai/dbgpt-openai:latest
+    command: "dbgpt start webserver --config /app/configs/dbgpt-local.toml "
+    environment:
+      - DBGPT_LANG=en
+    volumes:
+      # 挂载配置 & RAG 数据库即可
+      - ./configs:/app/configs
+      - ./pilot:/app/pilot
+    ports:
+      - "5670:5670"
+    restart: unless-stopped
+    networks:
+      - dbgptnet
+    ipc: host
+
+  airflow-webserver:
+    build:
+      context: ./airflow
+    container_name: airflow-web
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@10.233.2.151:5432/airflow
+      - AIRFLOW__WEBSERVER__AUTH_BACKEND=airflow.www.fab_security.manager.AUTH_DB
+      - _PIP_ADDITIONAL_REQUIREMENTS=psycopg2-binary
+      - AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Shanghai
+      - AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE=Asia/Shanghai
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags        # 发布 job 目录
+      - ./airflow/logs:/opt/airflow/logs        # 日志持久化目录
+      - ./airflow/config:/opt/airflow/config        # ⭐ 挂载你的 config
+      - ./airflow/sql:/opt/airflow/sql              # ⭐ 挂载你的 sql
+      - ./airflow/plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    command: airflow webserver
+    restart: unless-stopped
+    depends_on:
+      - airflow-scheduler
+
+  airflow-scheduler:
+    build:
+      context: ./airflow
+    container_name: airflow-scheduler
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@10.233.2.151:5432/airflow
+      - _PIP_ADDITIONAL_REQUIREMENTS=psycopg2-binary
+      - AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Shanghai
+      - AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE=Asia/Shanghai
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/config:/opt/airflow/config
+      - ./airflow/sql:/opt/airflow/sql
+      - ./airflow/plugins:/opt/airflow/plugins
+    command: bash -c "airflow db migrate && airflow scheduler"
+    restart: unless-stopped
+
+  weaviate:
+    image: semitechnologies/weaviate:latest
+    restart: unless-stopped
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "none"
+      ENABLE_MODULES: ""
+      CLUSTER_HOSTNAME: "weaviate"
+    volumes:
+      - ./pilot/vector_store/weaviate:/var/lib/weaviate  # 向量索引本地持久化
+    ports:
+      - "8081:8080"
+    networks:
+      - dbgptnet
+
+networks:
+  dbgptnet:
+    driver: bridge

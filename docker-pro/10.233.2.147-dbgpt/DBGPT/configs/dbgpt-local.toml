@@ -1,0 +1,36 @@
+# 语言
+language = "en"
+encrypt_key = "your_secret_key"
+
+# Web 服务
+[service.web]
+host = "0.0.0.0"
+port = 5670
+
+# 你的 sqlite DB
+[service.web.database]
+type = "sqlite"
+path = "/app/pilot/meta_data/dbgpt.db"
+
+[storage.alembic]   # ← 这里才是真正禁用的写法
+enabled = false
+
+# RAG 向量库（Chroma）
+[rag.storage.vector]
+type = "chroma"
+persist_path = "/app/pilot/data"
+
+# 仅保留你的 2 个模型配置
+[models]
+[[models.llms]]
+name = "Qwen3-32B"
+provider = "proxy/tongyi"
+api_base = "http://10.233.2.207:19090/v1"
+api_key = "sk-cebf765ed42a4d8babb6b147adba1dfe"
+reasoning_mode = false
+
+[[models.embeddings]]
+name = "bge-m3"
+provider = "proxy/openai"
+api_url = "http://10.233.2.207:19094/v1/embeddings"
+api_key = "sk-asxfiof1134xccacz1412dcvg512"

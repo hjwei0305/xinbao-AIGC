@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  qwen3-32b:
+    image: vllm/vllm-openai:latest
+    container_name: vllm_qwen32b
+    restart: unless-stopped
+    runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    environment:
+      - VLLM_API_KEY=sk-cebf765ed42a4d8babb6b147adba1dfe
+    ports:
+      - "19090:8000"
+    volumes:
+      - /opt/models/Qwen3-32B:/model
+    command: >
+      /model
+      --served-model-name Qwen3-32B
+      --max-model-len 8192
+      --gpu-memory-utilization 0.72
+      --kv-cache-dtype fp8_e5m2
+      --max-num-batched-tokens 512
+      --swap-space 4
+      --dtype half
+      --enforce-eager
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama-server
+    restart: unless-stopped
+    runtime: nvidia
+    ports:
+      - "19091:11434"
+    environment:
+      - OLLAMA_ORIGINS=*
+      - OLLAMA_API_KEY=sk-7414q03981324x9947d3716s29572262d
+    volumes:
+      - /usr/share/ollama/.ollama:/root/.ollama:rw
+    command: serve
