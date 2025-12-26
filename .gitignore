@@ -1,1 +1,5 @@
 .DS_Store
+docker-dev/openwebui/data/
+docker-dev/openwebui/monitor-db-data/
+**/*.sqlite3
+**/*.db

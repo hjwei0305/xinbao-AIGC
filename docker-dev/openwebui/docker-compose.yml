@@ -11,72 +11,71 @@ services:
       - ./data:/app/backend/data
     restart: always
 
-  pipelines:
-    image: ghcr.io/open-webui/pipelines:main
-    container_name: openwebui-pipelines
-    ports:
-      - "9099:9099"
-    environment:
-      - PIPELINES_API_KEY=laohe_laohe
-      - PIPELINES_URLS=file:///app/pipelines/pipelines/events_pipeline.py
-    volumes:
-      - ./pipelines:/app/pipelines
-    restart: always
+  # pipelines:
+  #   image: ghcr.io/open-webui/pipelines:main
+  #   container_name: openwebui-pipelines
+  #   ports:
+  #     - "9099:9099"
+  #   environment:
+  #     - PIPELINES_API_KEY=laohe_laohe
+  #   volumes:
+  #     - ./pipelines:/app/pipelines
+  #   restart: always
 
-  # Monitor 使用的数据库 (PostgreSQL)
-  db:
-    image: postgres:15-alpine
-    container_name: monitor-db
-    expose:
-      - "5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=openwebui
-      - POSTGRES_DB=openwebui_monitor
-    volumes:
-      - ./monitor-db-data:/var/lib/postgresql/data
-    restart: always
+  # # Monitor 使用的数据库 (PostgreSQL)
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: monitor-db
+  #   expose:
+  #     - "5432"
+  #   environment:
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=openwebui
+  #     - POSTGRES_DB=openwebui_monitor
+  #   volumes:
+  #     - ./monitor-db-data:/var/lib/postgresql/data
+  #   restart: always
 
-  # OpenWebUI-Monitor 服务
-  monitor:
-    build:
-      context: ./OpenWebUI-Monitor
-    # image: docker.io/variantconst/openwebui-monitor:latest
-      # 假设你把 Monitor 项目 clone 到这个目录
-    container_name: openwebui-monitor
-    ports:
-      - "7878:3000"   # Monitor 内部默认是 3000 (Dockerfile里 EXPOSE 3000)；DeepWiki 文档里也说 Monitor 会在 7878 对外。 :contentReference[oaicite:0]{index=0}  
-    env_file:
-      - ./OpenWebUI-Monitor/.env
-    environment:
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=openwebui
-      - POSTGRES_DATABASE=openwebui_monitor
-    depends_on:
-      - openwebui
-      - db
-    restart: always
+  # # OpenWebUI-Monitor 服务
+  # monitor:
+  #   build:
+  #     context: ./OpenWebUI-Monitor
+  #   # image: docker.io/variantconst/openwebui-monitor:latest
+  #     # 假设你把 Monitor 项目 clone 到这个目录
+  #   container_name: openwebui-monitor
+  #   ports:
+  #     - "7878:3000"   # Monitor 内部默认是 3000 (Dockerfile里 EXPOSE 3000)；DeepWiki 文档里也说 Monitor 会在 7878 对外。 :contentReference[oaicite:0]{index=0}  
+  #   env_file:
+  #     - ./OpenWebUI-Monitor/.env
+  #   environment:
+  #     - POSTGRES_HOST=db
+  #     - POSTGRES_PORT=5432
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=openwebui
+  #     - POSTGRES_DATABASE=openwebui_monitor
+  #   depends_on:
+  #     - openwebui
+  #     - db
+  #   restart: always
 
-  filesystem-server:
-    build:
-      context: ./openapi-servers/servers/filesystem
-    ports:
-      - 8081:8000
-    restart: always
-  memory-server:
-    build:
-      context: ./openapi-servers/servers/memory
-    ports:
-      - 8082:8000
-    volumes:
-      - memory:/app/data:rw
-  time-server:
-    build:
-      context: ./openapi-servers/servers/time
-    ports:
-      - 8083:8000
+  # filesystem-server:
+  #   build:
+  #     context: ./openapi-servers/servers/filesystem
+  #   ports:
+  #     - 8081:8000
+  #   restart: always
+  # memory-server:
+  #   build:
+  #     context: ./openapi-servers/servers/memory
+  #   ports:
+  #     - 8082:8000
+  #   volumes:
+  #     - memory:/app/data:rw
+  # time-server:
+  #   build:
+  #     context: ./openapi-servers/servers/time
+  #   ports:
+  #     - 8083:8000
 
 volumes:
   memory:
